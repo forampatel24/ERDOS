@@ -585,7 +585,8 @@ Stores
 
 ## Vector Database
 
-Qdrant
+ChromaDB
+pip install chromadb
 
 Stores
 
@@ -640,7 +641,7 @@ Example
 * PostgreSQL
 * TimescaleDB
 * PostGIS
-* Qdrant
+* ChromaDB
 
 ---
 
@@ -786,7 +787,7 @@ Dashboard
 Optimization
 
 * Ray
-* Qdrant
+* ChromaDB
 * Performance tuning
 
 ---

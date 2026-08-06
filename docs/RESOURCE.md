@@ -289,35 +289,35 @@ Decision path extraction
 
 ---
 
-# 8. Explanation Generation
-
-## Rule-Based Explanation Engine
+# 8. Natural Language Generation
 
 Purpose
 
-Generate deterministic, human-readable explanations from AI outputs.
+Convert structured explanations produced by the Explainability Layer into concise, operational language for emergency responders.
 
 Implementation
 
-- Python
-- Jinja2 Templates (optional)
-- Custom Explanation Generator
+• OpenAI API
+• Gemini API
+• OpenAI-compatible APIs
 
-Example Output
+Input
 
-Road R27 has been marked HIGH RISK because:
+• Structured Explanation Object
 
-• Rainfall exceeded 60 mm
-• Water level increased by 0.18 m
-• Elevation is below 5 m
+Output
 
-Advantages
+• Human-readable operational explanation
 
-- No GPU required
-- No model downloads
-- Fully deterministic
-- Explainable
-- Easy to debug
+Notes
+
+The LLM is never responsible for:
+• Flood prediction
+• Resource allocation
+• Route optimization
+• Decision making
+
+It is only responsible for translating structured evidence into natural language.
 
 # 9. Graph Processing
 
@@ -335,6 +335,23 @@ Graph algorithms
 
 ---
 
+## Google OR-Tools
+
+https://developers.google.com/optimization
+
+Purpose
+
+Vehicle Routing
+
+Constraint Optimization
+
+Scheduling
+
+Resource Allocation
+
+Open Source
+
+Yes
 ## OSMnx
 
 https://osmnx.readthedocs.io/
@@ -347,15 +364,21 @@ Download road network from OpenStreetMap.
 
 # 10. Route Planning
 
-Algorithms
+AAlgorithms
 
-* Dijkstra
-* A*
-* Yen's K Shortest Paths
+• Dijkstra
+• A*
+• Yen's K Shortest Paths
 
-Python Libraries
+Optimization
 
-* NetworkX
+• Vehicle Routing Problem (VRP)
+• Constraint Optimization
+
+Libraries
+
+• NetworkX
+• Google OR-Tools
 
 ---
 
@@ -391,9 +414,9 @@ Spatial database.
 
 ---
 
-## Qdrant
+## ChromaDB
 
-https://qdrant.tech/
+https://github.com/chroma-core/chroma
 
 Purpose
 
@@ -553,6 +576,20 @@ Coordinate transformations.
 
 ---
 
+## H3
+
+https://uber.github.io/h3-py/
+
+Purpose
+
+Hexagonal spatial indexing
+
+Spatial aggregation
+
+Risk heatmaps
+
+Geospatial indexing
+
 # 18. Python Utilities
 
 * tqdm
@@ -561,6 +598,19 @@ Coordinate transformations.
 * joblib
 * requests
 * httpx
+* PyArrow
+* Purpose
+* Fast parquet support
+* Columnar storage
+* High-performance data exchange
+
+Polars
+
+Purpose
+
+High-performance dataframe processing
+
+Optional alternative to Pandas
 
 ---
 
@@ -885,20 +935,21 @@ Edge Features
 
 ```text
 project/
-
-backend/
-frontend/
-database/
-simulator/
-streaming/
-models/
-xai/
-llm/
-graph/
-datasets/
-scripts/
-docs/
-tests/
+│
+├── backend/
+├── frontend/
+├── datasets/
+├── models/
+│   ├── prediction/
+│   └── checkpoints/
+├── digital_twin/
+├── simulator/
+├── streaming/
+├── orchestration/
+├── explainability/
+├── graph/
+├── docs/
+└── tests/
 ```
 
 ---
@@ -940,9 +991,12 @@ https://www.pgadmin.org/
 ```text
 fastapi
 uvicorn
+pydantic
 
 numpy
 pandas
+polars
+pyarrow
 scipy
 
 scikit-learn
@@ -959,16 +1013,18 @@ geopandas
 shapely
 rasterio
 pyproj
+h3
 
 sqlalchemy
 alembic
 psycopg2
 
-qdrant-client
-
 protobuf
-
 kafka-python
+
+ChromaDB-client
+
+ortools
 
 requests
 httpx
@@ -980,8 +1036,16 @@ python-dotenv
 joblib
 loguru
 tqdm
+jinja2
 ```
+## Optional Libraries
 
+### Jinja2
+
+Purpose
+
+- Prompt templates
+- Fallback explanation formatting
 ---
 
 # 28. Technology Summary
@@ -994,23 +1058,56 @@ tqdm
 | Streaming        | Kafka + Flink                  |
 | Serialization    | Protocol Buffers               |
 | ML               | XGBoost                        |
-| Deep Learning    | PyTorch                        |
+| Deep Learning    | PyTorch + ST-GNN                       |
 | GNN              | PyTorch Geometric              |
 | XAI              | Captum + Treelite                              |
 | Database         | PostgreSQL                     |
 | Time Series      | TimescaleDB                    |
 | Spatial DB       | PostGIS                        |
-| Vector DB        | Qdrant                         |
+| Vector DB        | ChromaDB                         |
 | Graph Algorithms | NetworkX                       |
 | Road Graph       | OSMnx                          |
 | GIS              | GeoPandas + Rasterio + Shapely |
 | Communication    | WebSockets                     |
-| Charts           | Plotly                         |
+| Visualization           | Plotly + Deck.gl                        |
 | Styling          | Tailwind CSS                   |
-
+| Natural Language  | LLM API (OpenAI / Gemini / OpenAI-compatible)
+|Optimization | Google OR-Tools|
 ---
 
-# 29. Free/Open-Source Policy
+# 29. Development Environment
+
+OS
+
+Windows 11
+
+Python
+
+3.12+
+
+Node.js
+
+Latest LTS
+
+Database
+
+PostgreSQL 17+
+
+IDE
+
+VS Code
+
+Version Control
+
+Git
+
+Package Managers
+
+pip
+
+npm
+
+# 30. Free/Open-Source Policy
 
 Every technology selected for this project satisfies at least one of the following:
 
@@ -1022,3 +1119,11 @@ Every technology selected for this project satisfies at least one of the followi
 * No deployment cost required during development
 
 The only external services used are publicly available datasets and free weather/hydrology APIs. All AI models, databases, and processing pipelines are intended to run locally during development.
+
+# 31. Version Policy
+
+This document represents the canonical technology stack for ERDOS Version 1.0.
+
+Technologies listed here should remain unchanged unless a future version of the project explicitly replaces them.
+
+Future changes should be documented in VERSIONS.md rather than modifying this document.
