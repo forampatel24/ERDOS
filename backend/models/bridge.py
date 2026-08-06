@@ -1,0 +1,2 @@
+﻿"""Bridge domain model."""
+

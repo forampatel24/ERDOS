@@ -1,0 +1,2 @@
+﻿"""Shelter endpoints (list, detail)."""
+

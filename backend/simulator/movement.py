@@ -1,0 +1,2 @@
+﻿"""Resource GPS movement simulation."""
+

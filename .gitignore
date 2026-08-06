@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# Environment
+.env
+
+# Node
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Data & Models
+datasets/raw/*
+datasets/processed/*
+!datasets/raw/.gitkeep
+!datasets/processed/.gitkeep
+models/checkpoints/*
+models/trained/*
+!models/checkpoints/.gitkeep
+!models/trained/.gitkeep
+
+# Logs
+logs/*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

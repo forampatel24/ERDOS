@@ -1,0 +1,2 @@
+﻿"""Resource allocation and assignment."""
+

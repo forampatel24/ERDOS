@@ -1,0 +1,63 @@
+# --- Backend / API ---
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+python-dotenv
+jinja2
+
+# --- Numerics / Data ---
+numpy
+pandas
+polars
+pyarrow
+scipy
+
+# --- Machine Learning ---
+scikit-learn
+xgboost
+
+# --- Deep Learning / GNN ---
+torch
+torch-geometric
+captum
+
+# --- Explainability ---
+treelite
+
+# --- Graph ---
+networkx
+osmnx
+
+# --- GIS ---
+geopandas
+shapely
+rasterio
+pyproj
+h3
+
+# --- Database ---
+sqlalchemy
+alembic
+psycopg2-binary
+chromadb
+
+# --- Streaming ---
+protobuf
+kafka-python
+
+# --- Optimization ---
+ortools
+
+# --- HTTP ---
+requests
+httpx
+
+# --- Visualization ---
+plotly
+matplotlib
+
+# --- Utilities ---
+joblib
+loguru
+tqdm

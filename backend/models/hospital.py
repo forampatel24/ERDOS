@@ -1,0 +1,2 @@
+﻿"""Hospital domain model."""
+

@@ -1,0 +1,2 @@
+﻿"""Kafka topic name constants."""
+

@@ -1,0 +1,2 @@
+﻿"""Publishes simulator-generated events."""
+

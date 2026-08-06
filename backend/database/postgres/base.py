@@ -1,0 +1,2 @@
+﻿"""SQLAlchemy declarative base."""
+

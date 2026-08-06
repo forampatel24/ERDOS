@@ -1,0 +1,2 @@
+﻿"""Emergency resource domain model."""
+

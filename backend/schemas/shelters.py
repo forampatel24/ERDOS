@@ -1,0 +1,2 @@
+﻿"""Shelter Pydantic schemas."""
+
