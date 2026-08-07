@@ -1,2 +1,29 @@
-﻿"""Hospital domain model."""
+"""Hospital domain model representing a hospital in the digital twin."""
 
+from __future__ import annotations
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from config.constants import InfrastructureStatus
+
+#: A point or polyline of ``(latitude, longitude)`` coordinates in WGS84 degrees.
+Geometry = list[tuple[float, float]]
+
+
+class Hospital(BaseModel):
+    """A hospital with its capacity, occupancy and current status.
+
+    ``risk_level`` is a coarse operational label (``LOW`` / ``MEDIUM`` /
+    ``HIGH``) maintained by the digital twin; ``occupancy`` must never exceed
+    ``capacity``.
+    """
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    hospital_id: str
+    name: str
+    geometry: Geometry = Field(default_factory=list)
+    capacity: int = Field(default=0, ge=0)
+    occupancy: int = Field(default=0, ge=0)
+    status: InfrastructureStatus = InfrastructureStatus.OPERATIONAL
+    risk_level: str = Field(default="LOW")

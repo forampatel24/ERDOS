@@ -1,2 +1,2 @@
-﻿"""Shared utilities (logging, config, geometry)."""
+﻿"""Shared utilities (logging, settings, time, geometry, validation)."""
 
