@@ -17,12 +17,20 @@ dist/
 # Data & Models
 datasets/raw/*
 datasets/processed/*
+datasets/historical/*
+datasets/static/*
+datasets/live_samples/*
 !datasets/raw/.gitkeep
 !datasets/processed/.gitkeep
+!datasets/historical/.gitkeep
+!datasets/static/.gitkeep
+!datasets/live_samples/.gitkeep
 models/checkpoints/*
 models/trained/*
+models/exports/*
 !models/checkpoints/.gitkeep
 !models/trained/.gitkeep
+!models/exports/.gitkeep
 
 # Logs
 logs/*.log

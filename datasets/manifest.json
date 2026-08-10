@@ -1,0 +1,31 @@
+{
+  "generated_at": "2026-08-10T13:18:34+00:00",
+  "provider": "Open-Meteo Historical Weather Archive + CWC (best-effort)",
+  "license_note": "Open-Meteo: CC-BY 4.0 / open data. CWC: public government data.",
+  "sources": [
+    {
+      "type": "weather_history",
+      "place": "Kochi",
+      "district": "Ernakulam",
+      "lat": 9.9312,
+      "lon": 76.2673,
+      "url": "https://archive-api.open-meteo.com/v1/archive?latitude=9.9312&longitude=76.2673&start_date=2018-01-01&end_date=2024-12-31&daily=precipitation_sum,rain_sum,temperature_2m_max,temperature_2m_min,relative_humidity_2m_mean&timezone=Asia/Kolkata"
+    },
+    {
+      "type": "weather_history",
+      "place": "Kottayam",
+      "district": "Kottayam",
+      "lat": 9.5916,
+      "lon": 76.5212,
+      "url": "https://archive-api.open-meteo.com/v1/archive?latitude=9.5916&longitude=76.5212&start_date=2018-01-01&end_date=2024-12-31&daily=precipitation_sum,rain_sum,temperature_2m_max,temperature_2m_min,relative_humidity_2m_mean&timezone=Asia/Kolkata"
+    },
+    {
+      "type": "weather_history",
+      "place": "Idukki",
+      "district": "Idukki",
+      "lat": 9.8469,
+      "lon": 76.95,
+      "url": "https://archive-api.open-meteo.com/v1/archive?latitude=9.8469&longitude=76.95&start_date=2018-01-01&end_date=2024-12-31&daily=precipitation_sum,rain_sum,temperature_2m_max,temperature_2m_min,relative_humidity_2m_mean&timezone=Asia/Kolkata"
+    }
+  ]
+}

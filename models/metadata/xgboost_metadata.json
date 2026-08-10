@@ -1,0 +1,63 @@
+{
+  "model": "XGBClassifier (xgboost, sklearn API)",
+  "version": "1.0.0",
+  "trained_at": "2026-08-10T14:04:30.058394+00:00",
+  "features": [
+    "rainfall_mm",
+    "elevation_m",
+    "slope",
+    "distance_to_river_m",
+    "water_level",
+    "water_rise_rate",
+    "road_type_numeric",
+    "lanes",
+    "road_length_m",
+    "traffic_density",
+    "neighbour_flooded",
+    "distance_to_shelter_km"
+  ],
+  "class_names": [
+    "NOT_FLOODED",
+    "FLOODED"
+  ],
+  "threshold": 0.5,
+  "label_rule": "flooded if precipitation_sum >= 75.0 mm on the road's place/date (documented bootstrap fallback until real flood maps arrive)",
+  "label_rule_threshold_mm": 75.0,
+  "data_source": "D:\\Foram_TP\\ERDOS\\datasets\\processed\\kerala_daily_weather.csv",
+  "num_rows": 6132,
+  "positive_rows": 532,
+  "split_fractions": {
+    "train": 0.7,
+    "validation": 0.15,
+    "test": 0.15000000000000005
+  },
+  "split_sizes": {
+    "train": 4292,
+    "validation": 920,
+    "test": 920
+  },
+  "metrics": {
+    "train": {
+      "auc": 1.0,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "validation": {
+      "auc": 0.9999999999999999,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "test": {
+      "auc": 1.0,
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    }
+  },
+  "auc": 1.0
+}
