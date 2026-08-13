@@ -1,78 +1,71 @@
-﻿"""Environment-driven application settings.
-
-Defines the single ``Settings`` object for the platform. All values are read
-from the ``.env`` file at the repository root (see ``.env.example``).
-"""
+﻿"""Application settings using pydantic-settings."""
 
 from __future__ import annotations
 
 from functools import lru_cache
+from typing import List
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Runtime configuration loaded from environment variables / ``.env``."""
+    """Application settings loaded from environment variables."""
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",
     )
 
-    # General
-    env: str = "development"
-    project_name: str = "ERDOS"
-    version: str = "1.0.0"
-    log_level: str = "INFO"
+    # --- Application ---
+    app_name: str = "ERDOS"
+    api_version: str = "1.0.0"
+    debug: bool = Field(default=False, alias="DEBUG")
+    log_level: str = Field(default="INFO", alias="LOG_LEVEL")
 
-    # API
-    api_host: str = "0.0.0.0"
-    api_port: int = 8000
-    jwt_secret: str = "change-me"
-    jwt_algorithm: str = "HS256"
-
-    # PostgreSQL / PostGIS
-    postgres_host: str = "localhost"
-    postgres_port: int = 5432
-    postgres_user: str = "erdos"
-    postgres_password: str = "erdos"
-    postgres_db: str = "erdos"
-    database_url: str = (
-        "postgresql+psycopg2://erdos:erdos@localhost:5432/erdos"
+    # --- API ---
+    api_host: str = Field(default="0.0.0.0", alias="API_HOST")
+    api_port: int = Field(default=8000, alias="API_PORT")
+    cors_origins: List[str] = Field(
+        default=["http://localhost:3000", "http://localhost:5173"],
+        alias="CORS_ORIGINS",
     )
 
-    # TimescaleDB
-    timescale_url: str = (
-        "postgresql+psycopg2://erdos:erdos@localhost:5432/erdos_timescale"
-    )
+    # --- Authentication ---
+    jwt_secret: str = Field(default="dev-secret-change-in-production", alias="JWT_SECRET")
+    jwt_algorithm: str = Field(default="HS256", alias="JWT_ALGORITHM")
+    jwt_expiration_minutes: int = Field(default=60, alias="JWT_EXPIRATION_MINUTES")
 
-    # ChromaDB
-    chromadb_host: str = "localhost"
-    chromadb_port: int = 8001
-    chromadb_path: str = "./data/chromadb"
+    # --- Digital Twin ---
+    twin_update_interval_seconds: int = Field(default=30, alias="TWIN_UPDATE_INTERVAL_SECONDS")
+    max_snapshot_age_seconds: int = Field(default=300, alias="MAX_SNAPSHOT_AGE_SECONDS")
 
-    # Kafka
-    kafka_bootstrap_servers: str = "localhost:9092"
-    kafka_group_id: str = "erdos-backend"
+    # --- Prediction ---
+    prediction_enabled: bool = Field(default=True, alias="PREDICTION_ENABLED")
+    prediction_interval_seconds: int = Field(default=60, alias="PREDICTION_INTERVAL_SECONDS")
+    stgnn_model_path: str = Field(default="models/stgnn_model.pt", alias="STGNN_MODEL_PATH")
+    xgboost_model_path: str = Field(default="models/xgboost_model.pkl", alias="XGBOOST_MODEL_PATH")
 
-    # Flink
-    flink_job_manager_host: str = "localhost"
-    flink_job_manager_port: int = 8081
+    # --- Database ---
+    postgres_dsn: str | None = Field(default=None, alias="POSTGRES_DSN")
+    timescaledb_dsn: str | None = Field(default=None, alias="TIMESCALEDB_DSN")
 
-    # Live data sources
-    weather_api_url: str = "https://api.open-meteo.com/v1/forecast"
-    cwc_river_api_url: str = "https://ffs.india-water.gov.in"
+    # --- Kafka/Streaming ---
+    kafka_bootstrap_servers: str = Field(default="localhost:9092", alias="KAFKA_BOOTSTRAP_SERVERS")
+    kafka_enabled: bool = Field(default=False, alias="KAFKA_ENABLED")
 
-    # LLM
-    llm_provider: str = "openai-compatible"
-    llm_api_key: str = ""
-    llm_base_url: str = ""
-    llm_model: str = ""
+    # --- ChromaDB ---
+    chromadb_host: str = Field(default="localhost", alias="CHROMADB_HOST")
+    chromadb_port: int = Field(default=8000, alias="CHROMADB_PORT")
 
 
-@lru_cache(maxsize=1)
+@lru_cache
 def get_settings() -> Settings:
-    """Return the cached application settings singleton."""
+    """Get cached settings instance."""
     return Settings()
 
 
-settings: Settings = get_settings()
+# For backward compatibility
+settings = get_settings()

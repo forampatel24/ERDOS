@@ -9,6 +9,6 @@ from __future__ import annotations
 from backend.utils.settings import settings
 from config.logging import configure_logging
 
-__version__: str = settings.version
+__version__: str = settings.api_version
 
 configure_logging()

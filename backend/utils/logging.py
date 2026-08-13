@@ -66,3 +66,39 @@ def get_logger(name: str) -> Any:
     """
     _configure_logging()
     return _loguru.bind(name=name)
+
+
+def setup_logging(log_level: str = "INFO") -> None:
+    """Configure the global logging handlers.
+
+    Kept as a compatibility entry point: attaches the standard handlers once.
+    The ``log_level`` argument is accepted for callers that pass it and
+    applied to the stderr handler level.
+    """
+    _configure_logging()
+    _loguru.remove()
+    _loguru.add(
+        sys.stderr,
+        level=str(log_level).upper(),
+        format=LOG_FORMAT,
+        colorize=True,
+    )
+    _loguru.add(
+        str(_LOGS_DIR / "backend.log"),
+        level="DEBUG",
+        format=LOG_FORMAT,
+        rotation="10 MB",
+        retention="30 days",
+        encoding="utf-8",
+    )
+    _loguru.add(
+        str(_LOGS_DIR / "errors.log"),
+        level="ERROR",
+        format=LOG_FORMAT,
+        rotation="10 MB",
+        retention="30 days",
+        encoding="utf-8",
+    )
+
+
+__all__ = ["get_logger", "setup_logging", "LOG_FORMAT"]
