@@ -55,6 +55,17 @@ class Settings(BaseSettings):
     # --- Kafka/Streaming ---
     kafka_bootstrap_servers: str = Field(default="localhost:9092", alias="KAFKA_BOOTSTRAP_SERVERS")
     kafka_enabled: bool = Field(default=False, alias="KAFKA_ENABLED")
+    kafka_group_id: str = Field(default="erdos-backend", alias="KAFKA_GROUP_ID")
+    streaming_tick_seconds: int = Field(default=5, alias="STREAMING_TICK_SECONDS")
+    streaming_serialization: str = Field(default="protobuf", alias="STREAMING_SERIALIZATION")
+
+    # --- Live sources ---
+    weather_api_url: str = Field(
+        default="https://api.open-meteo.com/v1/forecast", alias="WEATHER_API_URL"
+    )
+    cwc_river_api_url: str = Field(
+        default="https://ffs.india-water.gov.in", alias="CWC_RIVER_API_URL"
+    )
 
     # --- ChromaDB ---
     chromadb_host: str = Field(default="localhost", alias="CHROMADB_HOST")

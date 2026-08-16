@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 from typing import Any, Dict, List, Optional, Tuple
 
+from backend.streaming.kafka.codec import EventCodec, get_codec
 from backend.streaming.kafka.topics import for_event_type
 from backend.utils.logging import get_logger
 
@@ -63,12 +64,15 @@ class EventProducer:
         self,
         bootstrap_servers: Optional[str] = None,
         client_id: str = "erdos-producer",
+        codec: Optional[EventCodec] = None,
     ) -> None:
         """Configure a lazily-connected Kafka producer.
 
         :param bootstrap_servers: comma-separated ``host:port`` list. Defaults
             to ``settings.kafka_bootstrap_servers``.
         :param client_id: Kafka client id used for broker-side tracking.
+        :param codec: event codec used to serialize messages. Defaults to
+            :func:`get_codec` (JSON when protobuf is unavailable).
         """
         if bootstrap_servers is None:
             from backend.utils.settings import settings
@@ -76,6 +80,7 @@ class EventProducer:
             bootstrap_servers = settings.kafka_bootstrap_servers
         self.bootstrap_servers: str = bootstrap_servers
         self.client_id: str = client_id
+        self._codec: EventCodec = codec or get_codec()
         self._producer: Any = None
 
     # ------------------------------------------------------------ connection
@@ -97,7 +102,7 @@ class EventProducer:
             bootstrap_servers=self.bootstrap_servers,
             client_id=self.client_id,
             key_serializer=_encode,
-            value_serializer=_encode,
+            value_serializer=self._codec.encode,
             api_version_auto_timeout_ms=5000,
         )
         logger.info("connected kafka producer to {}", self.bootstrap_servers)

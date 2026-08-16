@@ -14,6 +14,7 @@ import json
 from typing import Any, Callable, Dict, Iterator, List, Optional
 
 from backend.digital_twin.state_manager import apply_event
+from backend.streaming.kafka.codec import EventCodec, get_codec
 from backend.utils.logging import get_logger
 from config.constants import KAFKA_TOPICS
 
@@ -49,6 +50,7 @@ class EventConsumer:
         topics: Optional[List[str]] = None,
         group_id: Optional[str] = None,
         bootstrap_servers: Optional[str] = None,
+        codec: Optional[EventCodec] = None,
     ) -> None:
         """Configure a lazily-connected consumer.
 
@@ -58,12 +60,15 @@ class EventConsumer:
             ``settings.kafka_group_id``.
         :param bootstrap_servers: comma-separated ``host:port`` list. Defaults
             to ``settings.kafka_bootstrap_servers``.
+        :param codec: event codec used to deserialize messages. Defaults to
+            :func:`get_codec` (JSON when protobuf is unavailable).
         """
         from backend.utils.settings import settings
 
         self.topics: List[str] = list(topics or KAFKA_TOPICS)
         self.group_id: str = group_id or settings.kafka_group_id
         self.bootstrap_servers: str = bootstrap_servers or settings.kafka_bootstrap_servers
+        self._codec: EventCodec = codec or get_codec()
         self._consumer: Any = None
 
     # ------------------------------------------------------------ connection
@@ -85,7 +90,7 @@ class EventConsumer:
             *self.topics,
             bootstrap_servers=self.bootstrap_servers,
             group_id=self.group_id,
-            value_deserializer=_decode,
+            value_deserializer=self._codec.decode,
             auto_offset_reset="latest",
             enable_auto_commit=True,
             consumer_timeout_ms=500,
@@ -114,7 +119,7 @@ class EventConsumer:
         batch = consumer.poll(timeout_ms=timeout_ms)
         for topic_partition, records in batch.items():
             for record in records:
-                event = _decode(record.value)
+                event = self._codec.decode(record.value)
                 if event is not None:
                     yield event
 

@@ -133,7 +133,12 @@ class RoutePlanner:
         # Shelter / hospital id or name.
         latlon = _resolve_named_location(data, point)
         if latlon is None:
-            latlon = _point_to_latlon(point)
+            try:
+                latlon = _point_to_latlon(point)
+            except ValueError:
+                # An unresolvable string (e.g. a node id that no longer exists
+                # in the graph) is treated as an unknown location.
+                return None
 
         return _nearest_node(nodes, self._node_coords, latlon)
 

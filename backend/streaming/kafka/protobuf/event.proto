@@ -1,0 +1,148 @@
+// ERDOS event wire format.
+//
+// The docs (ARCHITECTURE.md, PROJECT_SPEC.md) specify Protobuf as the
+// serialization used by the Weather/River/Simulator producers when publishing
+// into Kafka.  Every canonical event dict (``{"type": ..., "payload": {...}}``)
+// is encoded as an EventEnvelope; typed payload messages cover the documented
+// event types, and payload_json preserves fields a typed message does not model
+// so decoding is lossless.
+//
+// Run the following to regenerate event_pb2.py / event_pb2.pyi after editing:
+//   python -m grpc_tools.protoc -I backend/streaming/kafka/protobuf \
+//       --python_out=backend/streaming/kafka/protobuf \
+//       --pyi_out=backend/streaming/kafka/protobuf \
+//       backend/streaming/kafka/protobuf/event.proto
+syntax = "proto3";
+
+package erdos.streaming;
+
+// A single geographic point in decimal degrees.
+message Coordinate {
+  double latitude = 1;
+  double longitude = 2;
+}
+
+// A polyline/geometry expressed as an ordered list of points.
+message Geometry {
+  repeated Coordinate points = 1;
+}
+
+// Canonical event envelope published to Kafka by every producer.
+message EventEnvelope {
+  // Canonical event type, e.g. "weather_update" or "sensor_event".
+  string type = 1;
+  // ISO-8601 UTC timestamp carried on the event.
+  string timestamp = 2;
+  // Kafka topic the event was published to (informational).
+  string topic = 3;
+
+  // Typed payload for the documented canonical event types.
+  oneof payload {
+    WeatherPayload weather = 10;
+    RiverPayload river = 11;
+    SensorPayload sensor = 12;
+    EmergencyPayload emergency = 13;
+    GpsPayload gps = 14;
+    TrafficPayload traffic = 15;
+    RoadFailurePayload road_failure = 16;
+    ResourcePayload resource = 17;
+    ShelterPayload shelter = 18;
+  }
+
+  // Lossless fallback: the original payload dict serialised as JSON when the
+  // payload does not map cleanly onto a typed message (unknown event type or
+  // extra fields).  Decoding prefers this when present.
+  string payload_json = 20;
+}
+
+// weather_update payload (Open-Meteo or simulator).
+message WeatherPayload {
+  double rainfall_mm = 1;
+  double temperature_c = 2;
+  double humidity_pct = 3;
+  double wind_speed_kmh = 4;
+  string source = 5;
+  string timestamp = 6;
+}
+
+// river_update payload (CWC gauge or simulator).
+message RiverPayload {
+  string station_id = 1;
+  double water_level = 2;
+  double rise_rate = 3;
+  string source = 4;
+  string timestamp = 5;
+}
+
+// sensor_event payload (IoT water/rain sensors).
+message SensorPayload {
+  string sensor_id = 1;
+  string road_id = 2;
+  string sensor_type = 3;
+  string source = 4;
+  double rainfall_mm = 5;
+  double water_level = 6;
+  double flood_probability = 7;
+  double latitude = 8;
+  double longitude = 9;
+  string timestamp = 10;
+}
+
+// emergency_event payload (citizen calls / rescue requests).
+message EmergencyPayload {
+  string incident_id = 1;
+  string incident_type = 2;
+  Geometry geometry = 3;
+  string priority = 4;
+  string status = 5;
+  string description = 6;
+  int32 reported_people = 7;
+  double severity = 8;
+  string source = 9;
+  string created_at = 10;
+}
+
+// gps_event payload (resource / road GPS updates).
+message GpsPayload {
+  string resource_id = 1;
+  double latitude = 2;
+  double longitude = 3;
+  double heading = 4;
+  double speed_kmh = 5;
+  string timestamp = 6;
+}
+
+// traffic_event payload (road traffic density).
+message TrafficPayload {
+  string road_id = 1;
+  double traffic_density = 2;
+  string timestamp = 3;
+}
+
+// road_failure payload (road status transitions).
+message RoadFailurePayload {
+  string road_id = 1;
+  string status = 2;
+  string timestamp = 3;
+}
+
+// resource_event payload (resource location/status updates).
+message ResourcePayload {
+  string resource_id = 1;
+  string resource_type = 2;
+  string status = 3;
+  double speed_kmh = 4;
+  int32 capacity = 5;
+  Geometry geometry = 6;
+  string timestamp = 7;
+}
+
+// shelter_event / shelter_update payload.
+message ShelterPayload {
+  string shelter_id = 1;
+  string status = 2;
+  int32 occupancy = 3;
+  int32 capacity = 4;
+  Geometry geometry = 5;
+  string timestamp = 6;
+}

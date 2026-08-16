@@ -36,6 +36,7 @@ from backend.services.digital_twin_service import DigitalTwinService
 from backend.services.prediction_service import PredictionService
 from backend.services.dashboard_service import DashboardService
 from backend.services.explainability_service import ExplainabilityService
+from backend.services.streaming_service import StreamingService
 from backend.utils.logging import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -46,12 +47,13 @@ digital_twin_service: DigitalTwinService | None = None
 prediction_service: PredictionService | None = None
 dashboard_service: DashboardService | None = None
 explainability_service: ExplainabilityService | None = None
+streaming_service: StreamingService | None = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan: initialize services on startup, cleanup on shutdown."""
-    global orchestration_service, digital_twin_service, prediction_service, dashboard_service, explainability_service
+    global orchestration_service, digital_twin_service, prediction_service, dashboard_service, explainability_service, streaming_service
 
     settings = get_settings()
     setup_logging(settings.log_level)
@@ -68,6 +70,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     prediction_service = PredictionService(state_manager, ws_manager)
     dashboard_service = DashboardService(state_manager)
     explainability_service = ExplainabilityService()
+    streaming_service = StreamingService(state_manager)
 
     # Expose services on app.state for dependency getters
     app.state.ws_manager = ws_manager
@@ -76,6 +79,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     app.state.prediction_service = prediction_service
     app.state.dashboard_service = dashboard_service
     app.state.explainability_service = explainability_service
+    app.state.streaming_service = streaming_service
 
     # Register WebSocket event handlers
     await register_websocket_routes(ws_manager, orchestration_service, digital_twin_service, prediction_service)
@@ -84,6 +88,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await ws_manager.start()
     await orchestration_service.start_background_tasks()
     await prediction_service.start_background_tasks()
+    await streaming_service.start_background_tasks()
 
     logger.info("ERDOS backend started successfully")
 
@@ -93,6 +98,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("Shutting down ERDOS backend...")
     await orchestration_service.stop_background_tasks()
     await prediction_service.stop_background_tasks()
+    await streaming_service.stop_background_tasks()
     await ws_manager.stop()
     logger.info("ERDOS backend stopped")
 

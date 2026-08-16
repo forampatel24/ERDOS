@@ -142,9 +142,14 @@ class PredictionService:
                 # Find nearest road for this cell
                 best_prob = 0.0
                 for road_id, road_data in roads.items():
-                    geom = road_data.get("geometry", {}).get("coordinates", [])
-                    if geom:
-                        road_lat, road_lon = geom[0]["lat"], geom[0]["lon"]
+                    geometry = road_data.get("geometry") or {}
+                    coords = geometry.get("coordinates") if isinstance(geometry, dict) else geometry
+                    if coords:
+                        first = coords[0]
+                        if isinstance(first, dict):
+                            road_lat, road_lon = first["lat"], first["lon"]
+                        else:
+                            road_lat, road_lon = first[0], first[1]
                         dist = ((road_lat - lat) ** 2 + (road_lon - lon) ** 2) ** 0.5
                         if dist < 0.01:  # ~1km
                             best_prob = max(best_prob, road_data.get("flood_probability", 0))
