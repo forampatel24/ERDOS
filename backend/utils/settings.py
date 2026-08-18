@@ -51,6 +51,8 @@ class Settings(BaseSettings):
     # --- Database ---
     postgres_dsn: str | None = Field(default=None, alias="POSTGRES_DSN")
     timescaledb_dsn: str | None = Field(default=None, alias="TIMESCALEDB_DSN")
+    database_url: str | None = Field(default=None, alias="DATABASE_URL")
+    timescale_url: str | None = Field(default=None, alias="TIMESCALE_URL")
 
     # --- Kafka/Streaming ---
     kafka_bootstrap_servers: str = Field(default="localhost:9092", alias="KAFKA_BOOTSTRAP_SERVERS")
@@ -70,6 +72,7 @@ class Settings(BaseSettings):
     # --- ChromaDB ---
     chromadb_host: str = Field(default="localhost", alias="CHROMADB_HOST")
     chromadb_port: int = Field(default=8000, alias="CHROMADB_PORT")
+    chromadb_path: str = Field(default="./data/chromadb", alias="CHROMADB_PATH")
 
 
 @lru_cache

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 from backend.digital_twin.state_manager import StateManager
 from backend.schemas.digital_twin import (
@@ -29,6 +29,10 @@ if TYPE_CHECKING:
     from backend.api.websocket.connection import WebSocketManager
 
 from backend.api.middleware.error_handler import NotFoundError
+from backend.database.postgres.session import session_scope
+from backend.utils.logging import get_logger
+
+logger = get_logger("services.digital_twin")
 
 
 class DigitalTwinService:
@@ -38,9 +42,64 @@ class DigitalTwinService:
         self,
         state_manager: StateManager,
         ws_manager: "WebSocketManager",
+        session_factory: Optional[Callable[[], Any]] = None,
     ) -> None:
         self._state_manager = state_manager
         self._ws = ws_manager
+        self._session_factory = session_factory
+
+    # ------------------------------------------------------------ persistence
+
+    def _persist_incident(
+        self, incident_id: str, values: Dict[str, Any]
+    ) -> None:
+        """Best-effort persistence of an incident to PostgreSQL.
+
+        The incidents table uses an integer primary key while the API exposes
+        string incident IDs, so rows whose ID is not numeric are skipped with
+        a warning.  Failures are logged and never raised to the caller.
+        """
+        if self._session_factory is None:
+            return
+        if not incident_id.isdigit():
+            logger.warning(
+                "skipping incident persistence for non-integer id '{}'",
+                incident_id,
+            )
+            return
+        try:
+            from backend.database.postgres import crud
+
+            with session_scope(self._session_factory) as session:
+                crud.create_incident(
+                    session,
+                    incident_id=int(incident_id),
+                    incident_type=values.get("incident_type"),
+                    priority=values.get("priority"),
+                    status=values.get("status"),
+                )
+        except Exception as exc:  # noqa: BLE001 - persistence is best effort
+            logger.warning("incident persistence failed for {}: {}", incident_id, exc)
+
+    def _persist_incident_update(
+        self, incident_id: str, values: Dict[str, Any]
+    ) -> None:
+        """Best-effort update of an incident row in PostgreSQL."""
+        if self._session_factory is None:
+            return
+        if not incident_id.isdigit():
+            return
+        try:
+            from backend.database.postgres import crud
+
+            with session_scope(self._session_factory) as session:
+                crud.update_incident_status(
+                    session,
+                    incident_id=int(incident_id),
+                    status=values.get("status") or "ACTIVE",
+                )
+        except Exception as exc:  # noqa: BLE001 - persistence is best effort
+            logger.warning("incident update persistence failed for {}: {}", incident_id, exc)
 
     # ------------------------------------------------------------ snapshot
 
@@ -289,6 +348,7 @@ class DigitalTwinService:
         data["geometry"] = self._schema_geometry_to_domain(data.get("geometry"))
         incident_model = Incident(**data)
         self._state_manager.update_incident(incident_model)
+        self._persist_incident(incident_model.incident_id, incident_model.model_dump())
 
         await self._ws.broadcast(
             "digital_twin",
@@ -325,6 +385,7 @@ class DigitalTwinService:
         updated["geometry"] = self._schema_geometry_to_domain(updated.get("geometry"))
         incident = Incident(**updated)
         self._state_manager.update_incident(incident)
+        self._persist_incident_update(incident_id, updated)
 
         await self._ws.broadcast(
             "digital_twin",

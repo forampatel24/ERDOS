@@ -74,3 +74,69 @@ def search_similars(
 def count() -> int:
     """Return the number of stored historical disaster records."""
     return get_collection().count()
+
+
+#: Sample historical disaster records used to seed an empty collection so the
+#: explainability service can demonstrate similar-disaster retrieval.  Payload
+#: fields follow ``DATABASE_SCHEMA.md`` section 9.
+SAMPLE_DISASTERS: list[dict[str, Any]] = [
+    {
+        "disaster_type": "flood",
+        "district_name": "Ernakulam",
+        "rainfall": 120.5,
+        "river_level": 3.8,
+        "flood_extent": 0.65,
+        "casualties": 2,
+        "response_summary": "Severe urban flooding; boats deployed to rescue stranded residents.",
+    },
+    {
+        "disaster_type": "flood",
+        "district_name": "Alappuzha",
+        "rainfall": 98.0,
+        "river_level": 3.2,
+        "flood_extent": 0.5,
+        "casualties": 0,
+        "response_summary": "Low-lying areas inundated; shelters opened for affected families.",
+    },
+    {
+        "disaster_type": "flood",
+        "district_name": "Thrissur",
+        "rainfall": 145.0,
+        "river_level": 4.1,
+        "flood_extent": 0.72,
+        "casualties": 4,
+        "response_summary": "River overflow closed several roads; evacuation routes established.",
+    },
+    {
+        "disaster_type": "flood",
+        "district_name": "Pathanamthitta",
+        "rainfall": 88.5,
+        "river_level": 2.9,
+        "flood_extent": 0.38,
+        "casualties": 0,
+        "response_summary": "Moderate flooding near riverbanks; advisories issued to residents.",
+    },
+    {
+        "disaster_type": "landslide",
+        "district_name": "Wayanad",
+        "rainfall": 160.0,
+        "river_level": 1.5,
+        "flood_extent": 0.0,
+        "casualties": 8,
+        "response_summary": "Hillslope failure after heavy rain; road closure and debris clearance.",
+    },
+]
+
+
+def seed_historical_disasters() -> int:
+    """Add :data:`SAMPLE_DISASTERS` to the collection when it is empty.
+
+    Returns the number of records added (``0`` when the collection already has
+    records, so repeated startup calls are idempotent).
+    """
+    collection = get_collection()
+    if collection.count() > 0:
+        return 0
+    for disaster in SAMPLE_DISASTERS:
+        add_disaster(disaster)
+    return len(SAMPLE_DISASTERS)

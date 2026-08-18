@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any, Dict, List, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 from backend.digital_twin.state_manager import StateManager
+from backend.database.postgres.session import session_scope
+from backend.utils.logging import get_logger
 from backend.schemas.prediction import (
     FloodPredictionRequest,
     FloodPredictionResponse,
@@ -20,6 +22,8 @@ from backend.schemas.prediction import (
 if TYPE_CHECKING:
     from backend.api.websocket.connection import WebSocketManager
 
+logger = get_logger("services.prediction")
+
 
 class PredictionService:
     """Async service for flood prediction operations."""
@@ -28,11 +32,40 @@ class PredictionService:
         self,
         state_manager: StateManager,
         ws_manager: "WebSocketManager",
+        session_factory: Optional[Callable[[], Any]] = None,
     ) -> None:
         self._state_manager = state_manager
         self._ws = ws_manager
+        self._session_factory = session_factory
         self._prediction_task: Optional[asyncio.Task] = None
         self._prediction_interval = 60  # seconds
+
+    # ------------------------------------------------------------ persistence
+
+    def _persist_predictions(self, predictions: List[RoadFloodPrediction]) -> None:
+        """Best-effort persistence of prediction rows to PostgreSQL.
+
+        The predictions table's ``road_id`` is an integer foreign key, so
+        string road IDs are stored as NULL.  Failures are logged and never
+        raised to the caller.
+        """
+        if self._session_factory is None:
+            return
+        try:
+            from backend.database.postgres import crud
+
+            with session_scope(self._session_factory) as session:
+                for prediction in predictions:
+                    crud.create_prediction(
+                        session,
+                        prediction_type="flood",
+                        road_id=prediction.road_id if prediction.road_id.isdigit() else None,
+                        flood_probability=prediction.flood_probability,
+                        confidence=prediction.confidence_upper,
+                        timestamp=prediction.predicted_at,
+                    )
+        except Exception as exc:  # noqa: BLE001 - persistence is best effort
+            logger.warning("prediction persistence failed: {}", exc)
 
     # ------------------------------------------------------------ lifecycle
 
@@ -79,6 +112,8 @@ class PredictionService:
                     valid_until=datetime.now(timezone.utc),
                 )
             )
+
+        self._persist_predictions(predictions)
 
         await self._ws.broadcast(
             "prediction",

@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import Generator, Iterator
+from contextlib import contextmanager
+from typing import Callable, Optional
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -24,5 +26,25 @@ def get_db() -> Generator[Session, None, None]:
     db = SessionLocal()
     try:
         yield db
+    finally:
+        db.close()
+
+
+@contextmanager
+def session_scope(
+    factory: Optional[Callable[[], Session]] = None,
+) -> Iterator[Session]:
+    """Provide a transactional scope around a series of operations.
+
+    Commits on success, rolls back on error and always closes the session so
+    callers never leak connections.  ``factory`` defaults to ``SessionLocal``.
+    """
+    db = (factory or SessionLocal)()
+    try:
+        yield db
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()

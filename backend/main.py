@@ -31,6 +31,7 @@ from backend.api.websocket.events import router as websocket_router
 from backend.api.websocket.events import register_websocket_routes
 from backend.api.dependencies.settings import get_settings
 from backend.digital_twin.state_manager import get_state_manager
+from backend.database.postgres.session import SessionLocal
 from backend.services.orchestration_service import OrchestrationService
 from backend.services.digital_twin_service import DigitalTwinService
 from backend.services.prediction_service import PredictionService
@@ -66,10 +67,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # Initialize services
     ws_manager = get_ws_manager()
     orchestration_service = OrchestrationService(state_manager, ws_manager)
-    digital_twin_service = DigitalTwinService(state_manager, ws_manager)
-    prediction_service = PredictionService(state_manager, ws_manager)
+    digital_twin_service = DigitalTwinService(state_manager, ws_manager, session_factory=SessionLocal)
+    prediction_service = PredictionService(state_manager, ws_manager, session_factory=SessionLocal)
     dashboard_service = DashboardService(state_manager)
-    explainability_service = ExplainabilityService()
+    explainability_service = ExplainabilityService(session_factory=SessionLocal)
     streaming_service = StreamingService(state_manager)
 
     # Expose services on app.state for dependency getters
@@ -83,6 +84,18 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     # Register WebSocket event handlers
     await register_websocket_routes(ws_manager, orchestration_service, digital_twin_service, prediction_service)
+
+    # Seed the historical-disaster vector store so similar-disaster retrieval
+    # has records to return.  Best-effort: the app boots even when ChromaDB is
+    # unavailable or already seeded.
+    try:
+        from backend.database.chromadb.retrieval import seed_historical_disasters
+
+        added = seed_historical_disasters()
+        if added:
+            logger.info("Seeded %d historical disaster records", added)
+    except Exception as exc:  # noqa: BLE001 - vector store is optional
+        logger.warning("Historical disaster seeding skipped: %s", exc)
 
     # Start background tasks
     await ws_manager.start()
