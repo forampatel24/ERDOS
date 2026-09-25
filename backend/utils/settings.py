@@ -74,6 +74,15 @@ class Settings(BaseSettings):
     chromadb_port: int = Field(default=8000, alias="CHROMADB_PORT")
     chromadb_path: str = Field(default="./data/chromadb", alias="CHROMADB_PATH")
 
+    # --- LLM (Groq OpenAI-compatible) ---
+    llm_provider: str = Field(default="groq", alias="LLM_PROVIDER")
+    llm_api_key: str = Field(default="", alias="LLM_API_KEY")
+    llm_base_url: str = Field(default="https://api.groq.com/openai/v1", alias="LLM_BASE_URL")
+    llm_model: str = Field(default="llama-3.3-70b-versatile", alias="LLM_MODEL")
+    llm_timeout_seconds: int = Field(default=15, alias="LLM_TIMEOUT_SECONDS")
+    llm_max_tokens: int = Field(default=512, alias="LLM_MAX_TOKENS")
+    llm_temperature: float = Field(default=0.2, alias="LLM_TEMPERATURE")
+
 
 @lru_cache
 def get_settings() -> Settings:

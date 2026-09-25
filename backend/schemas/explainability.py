@@ -27,6 +27,7 @@ class PredictionExplanation(APIBaseModel):
     shap_values: Optional[Dict[str, float]] = None
     counterfactuals: Optional[List[Dict[str, Any]]] = None
     similar_disasters: Optional[List[Dict[str, Any]]] = None
+    narrative: Optional[str] = None
     generated_at: datetime
 
 
@@ -40,6 +41,7 @@ class DecisionExplanation(APIBaseModel):
     alternatives_evaluated: List[Dict[str, Any]]
     confidence: float = Field(ge=0, le=1)
     similar_disasters: Optional[List[Dict[str, Any]]] = None
+    narrative: Optional[str] = None
     generated_at: datetime
 
 
