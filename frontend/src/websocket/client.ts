@@ -1,1 +1,1 @@
-﻿// Placeholder: WebSocket connection and event subscription client.
+﻿export * from "../hooks/useWebSocket";
