@@ -161,14 +161,19 @@ class SpatioTemporalGNN:
     horizon: int
 
     def __new__(cls, *args: Any, **kwargs: Any) -> "SpatioTemporalGNN":
-        return _model_class()(*args, **kwargs)
+        # Avoid recursion: _SpatioTemporalGNNImpl inherits from SpatioTemporalGNN,
+        # so its instantiation must bypass this __new__.
+        if cls is not SpatioTemporalGNN:
+            return object.__new__(cls)
+        impl_cls = _model_class()
+        return object.__new__(impl_cls)
 
 
 def torch_available() -> bool:
     """Return True when torch and torch-geometric can be imported."""
     try:
         require_torch()
-        _, _ = _model_class()
+        _model_class()
     except RuntimeError:
         return False
     return True
