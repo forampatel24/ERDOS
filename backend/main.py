@@ -97,6 +97,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     except Exception as exc:  # noqa: BLE001 - vector store is optional
         logger.warning("Historical disaster seeding skipped: %s", exc)
 
+    # Initialize Ray for parallel prediction/routing when available (Phase 8).
+    # Best-effort: app boots and runs sequentially if Ray is not installed.
+    try:
+        from backend.optimization.ray_utils import init_ray
+
+        if init_ray():
+            logger.info("Ray optimization enabled — parallel prediction/routing active")
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Ray init skipped: %s", exc)
+
     # Start background tasks
     await ws_manager.start()
     await orchestration_service.start_background_tasks()

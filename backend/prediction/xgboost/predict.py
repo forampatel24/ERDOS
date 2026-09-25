@@ -87,14 +87,59 @@ def predict_road_risks(
         documented heuristic when ``None``.
     :returns: DataFrame indexed by ``road_id`` with ``flood_probability`` and
         ``predicted_accessibility`` columns.
+
+    Results are cached (TTL 3s) on snapshot content hash so dashboard polling
+    at 5s intervals avoids recomputing the feature frame and XGBoost inference.
     """
-    features = build_road_features(snapshot)
-    if model is not None:
-        probabilities = model.predict_proba(features)
-        logger.info("Using trained XGBoost model for {} roads", len(features))
-    else:
-        probabilities = _heuristic_probabilities(features)
-        logger.info("No trained model; using heuristic flood risk for {} roads", len(features))
+    # Fast cache path — hash roads + weather + river_levels + model id
+    try:
+        from backend.optimization.performance import get_prediction_cache
+        import hashlib
+
+        cache = get_prediction_cache()
+        # Lightweight fingerprint: road ids + flood probs + rainfall + model presence
+        roads = snapshot.get("roads") or {}
+        weather = snapshot.get("weather") or {}
+        rivers = snapshot.get("river_levels") or {}
+        fp = f"{sorted(roads.keys())}|{weather.get('rainfall_mm')}|{len(rivers)}|{model is not None}|{len(roads)}"
+        # Include first road's flood_prob to invalidate on state change
+        if roads:
+            first = next(iter(roads.values()))
+            if isinstance(first, dict):
+                fp += f"|{first.get('flood_probability')}|{first.get('water_level')}"
+        key = hashlib.sha256(fp.encode()).hexdigest()[:16]
+        cached = cache.get(key)
+        if cached is not None:
+            return cached  # type: ignore[return-value]
+        features = build_road_features(snapshot)
+        if model is not None:
+            probabilities = model.predict_proba(features)
+            logger.info("Using trained XGBoost model for {} roads", len(features))
+        else:
+            probabilities = _heuristic_probabilities(features)
+            logger.info("No trained model; using heuristic flood risk for {} roads", len(features))
+        # Build output then cache before return (fall through to shared tail)
+        probabilities = __import__("numpy").clip(probabilities, 0.0, 1.0)
+        output = pd.DataFrame(
+            {
+                "flood_probability": probabilities,
+                "predicted_accessibility": [accessibility_for(p) for p in probabilities],
+            },
+            index=features.index,
+            columns=["flood_probability", "predicted_accessibility"],
+        )
+        output.index.name = "road_id"
+        cache.set(key, output)
+        return output
+    except Exception:
+        # Fallback without cache on any error
+        features = build_road_features(snapshot)
+        if model is not None:
+            probabilities = model.predict_proba(features)
+            logger.info("Using trained XGBoost model for {} roads", len(features))
+        else:
+            probabilities = _heuristic_probabilities(features)
+            logger.info("No trained model; using heuristic flood risk for {} roads", len(features))
 
     probabilities = np.clip(probabilities, 0.0, 1.0)
     output = pd.DataFrame(

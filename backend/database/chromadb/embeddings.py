@@ -56,5 +56,23 @@ def _payload_text(payload: dict[str, Any]) -> str:
 
 
 def embed_payload(payload: dict[str, Any]) -> list[float]:
-    """Vectorize a disaster payload into a fixed-size embedding."""
-    return generate_embedding(_payload_text(payload))
+    """Vectorize a disaster payload into a fixed-size embedding.
+
+    Results are cached (TTL 60s, max 256) via ``backend.optimization`` so
+    repeated queries for the same disaster (e.g., dashboard polling) avoid
+    recomputing the 256-dim n-gram vector.
+    """
+    # Cache key is the canonical text (deterministic and hashable)
+    text = _payload_text(payload)
+    try:
+        from backend.optimization.performance import get_embedding_cache
+
+        cache = get_embedding_cache()
+        cached = cache.get(text)
+        if cached is not None:
+            return cached  # type: ignore[return-value]
+        emb = generate_embedding(text)
+        cache.set(text, emb)
+        return emb
+    except Exception:
+        return generate_embedding(text)
